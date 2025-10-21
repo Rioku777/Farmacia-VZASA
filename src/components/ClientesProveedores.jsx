@@ -36,14 +36,16 @@ const ClientesProveedores = ({ currentUser }) => {
       toast({ title: "Error ❌", description: "El nombre es obligatorio.", variant: "destructive" });
       return;
     }
+
+    const { notas, ...payload } = formData; // Exclude 'notas' from the payload
     
     try {
       if (editando) {
-        const actualizado = await api.update(vista, editando.id, formData);
+        const actualizado = await api.update(vista, editando.id, payload);
         setItems(items.map(item => item.id === editando.id ? actualizado : item));
         toast({ title: "Actualizado ✅", description: `${formData.nombre} ha sido actualizado.` });
       } else {
-        const nuevo = await api.create(vista, formData);
+        const nuevo = await api.create(vista, payload);
         setItems([...items, nuevo]);
         toast({ title: "Agregado ✅", description: `${formData.nombre} ha sido agregado.` });
       }

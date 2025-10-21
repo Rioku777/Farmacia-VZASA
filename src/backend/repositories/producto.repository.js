@@ -1,9 +1,11 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma.js';
 
 export const findMany = async () => {
-  return await prisma.producto.findMany();
+  return await prisma.producto.findMany({
+    include: {
+      proveedor: true,
+    },
+  });
 };
 
 export const create = async (producto) => {
@@ -15,6 +17,9 @@ export const create = async (producto) => {
 export const findUnique = async (id) => {
   return await prisma.producto.findUnique({
     where: { id },
+    include: {
+      proveedor: true,
+    },
   });
 };
 

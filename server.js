@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import clienteRoutes from './src/backend/routes/cliente.routes.js';
