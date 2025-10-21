@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search, Users, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getData, setData } from '@/lib/dataService';
+import * as api from '@/lib/apiService';
 
 const ClientesProveedores = ({ currentUser }) => {
   const [vista, setVista] = useState('clientes');
@@ -15,7 +15,11 @@ const ClientesProveedores = ({ currentUser }) => {
   const [formData, setFormData] = useState({ nombre: '', telefono: '', email: '', direccion: '', notas: '' });
 
   useEffect(() => {
-    setItems(getData(vista));
+    const fetchData = async () => {
+      const data = await api.get(vista);
+      setItems(data);
+    };
+    fetchData();
     setBusqueda('');
   }, [vista]);
 
@@ -27,31 +31,37 @@ const ClientesProveedores = ({ currentUser }) => {
   
   const cerrarModal = () => setMostrarModal(false);
 
-  const guardar = () => {
+  const guardar = async () => {
     if (!formData.nombre) {
       toast({ title: "Error ❌", description: "El nombre es obligatorio.", variant: "destructive" });
       return;
     }
     
-    let listaActualizada;
-    if (editando) {
-      listaActualizada = items.map(item => item.id === editando.id ? { ...formData, id: item.id } : item);
-      toast({ title: "Actualizado ✅", description: `${formData.nombre} ha sido actualizado.` });
-    } else {
-      listaActualizada = [...items, { ...formData, id: Date.now() }];
-      toast({ title: "Agregado ✅", description: `${formData.nombre} ha sido agregado.` });
+    try {
+      if (editando) {
+        const actualizado = await api.update(vista, editando.id, formData);
+        setItems(items.map(item => item.id === editando.id ? actualizado : item));
+        toast({ title: "Actualizado ✅", description: `${formData.nombre} ha sido actualizado.` });
+      } else {
+        const nuevo = await api.create(vista, formData);
+        setItems([...items, nuevo]);
+        toast({ title: "Agregado ✅", description: `${formData.nombre} ha sido agregado.` });
+      }
+      cerrarModal();
+    } catch (error) {
+      toast({ title: "Error ❌", description: "No se pudo guardar el registro.", variant: "destructive" });
     }
-    
-    setData(vista, listaActualizada);
-    setItems(listaActualizada);
-    cerrarModal();
   };
 
-  const eliminar = (id) => {
-    const listaActualizada = items.filter(item => item.id !== id);
-    setData(vista, listaActualizada);
-    setItems(listaActualizada);
-    toast({ title: "Eliminado 🗑️", description: "El registro ha sido eliminado." });
+  const eliminar = async (id) => {
+    try {
+      await api.remove(vista, id);
+      const listaActualizada = items.filter(item => item.id !== id);
+      setItems(listaActualizada);
+      toast({ title: "Eliminado 🗑️", description: "El registro ha sido eliminado." });
+    } catch (error) {
+      toast({ title: "Error ❌", description: "No se pudo eliminar el registro.", variant: "destructive" });
+    }
   };
 
   const listaFiltrada = items.filter(item =>
