@@ -4,7 +4,9 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "vite --host :: --port 3000",
+		"start:backend": "node server.js",
+		"dev:frontend": "vite --host localhost --port 3000",
+		"dev": "concurrently \"npm:dev:frontend\" \"npm:start:backend\"",
 		"build": "node tools/generate-llms.js || true && vite build",
 		"preview": "vite preview --host :: --port 3000"
 	},
@@ -21,6 +23,8 @@
 		"@radix-ui/react-toast": "^1.1.5",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.0.0",
+		"concurrently": "^9.2.1",
+		"express": "^5.1.0",
 		"framer-motion": "^10.16.4",
 		"lucide-react": "^0.285.0",
 		"react": "^18.2.0",
