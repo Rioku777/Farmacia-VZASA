@@ -22,3 +22,7 @@ dist
 *.njsproj
 *.sln
 *.sw?
+
+/src/generated/prisma
+.env
+prisma/dev.db

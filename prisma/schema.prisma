@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Rol {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @unique
+  usuarios Usuario[]
+}
+
+model Usuario {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  email     String    @unique
+  password  String
+  rol       Rol       @relation(fields: [rolId], references: [id])
+  rolId     Int
+  facturas  Factura[]
+}
+
+model Cliente {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  direccion String
+  telefono  String
+  email     String    @unique
+  facturas  Factura[]
+}
+
+model Proveedor {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  direccion String
+  telefono  String
+  email     String     @unique
+  productos Producto[]
+}
+
+model Producto {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String
+  descripcion           String
+  precio                Float
+  stock                 Int
+  proveedor             Proveedor               @relation(fields: [proveedorId], references: [id])
+  proveedorId           Int
+  facturaDetalles       FacturaDetalle[]
+  inventarioMovimientos InventarioMovimiento[]
+}
+
+model Factura {
+  id        Int              @id @default(autoincrement())
+  fecha     DateTime         @default(now())
+  cliente   Cliente          @relation(fields: [clienteId], references: [id])
+  clienteId Int
+  usuario   Usuario          @relation(fields: [usuarioId], references: [id])
+  usuarioId Int
+  total     Float
+  detalles  FacturaDetalle[]
+}
+
+model FacturaDetalle {
+  id         Int     @id @default(autoincrement())
+  factura    Factura @relation(fields: [facturaId], references: [id])
+  facturaId  Int
+  producto   Producto @relation(fields: [productoId], references: [id])
+  productoId Int
+  cantidad   Int
+  precio     Float
+}
+
+model InventarioMovimiento {
+  id         Int      @id @default(autoincrement())
+  producto   Producto @relation(fields: [productoId], references: [id])
+  productoId Int
+  tipo       String
+  cantidad   Int
+  fecha      DateTime @default(now())
+}
