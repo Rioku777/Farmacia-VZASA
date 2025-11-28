@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Download, Upload, Moon, Sun, Shield, Database, Edit } from 'lucide-react';
+import { Save, Download, Upload, Moon, Sun, Shield, Database, Edit, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { getData, setData, getAllData } from '@/lib/dataService';
 
-const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
+const Configuracion = ({ currentUser, darkMode, toggleTheme, currentTheme, changeColorTheme }) => {
   const [config, setConfig] = useState({
     nombreFarmacia: 'Farmacia V&ZASA', direccion: '', telefono: '', email: '', iva: 15
   });
@@ -86,14 +86,38 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-6">
             <h2 className="text-xl font-bold text-white mb-4">Apariencia</h2>
-            <div className="flex items-center justify-between glass-card p-4 rounded-xl">
+            <div className="flex items-center justify-between glass-card p-4 rounded-xl mb-4">
               <div className="flex items-center gap-3">
-                {darkMode ? <Moon className="w-6 h-6 text-[#007C84]" /> : <Sun className="w-6 h-6 text-[#007C84]" />}
+                {darkMode ? <Moon className="w-6 h-6 text-[var(--primary-color)]" /> : <Sun className="w-6 h-6 text-[var(--primary-color)]" />}
                 <p className="text-white font-medium">Modo {darkMode ? 'Oscuro' : 'Claro'}</p>
               </div>
-              <button onClick={toggleTheme} className={`relative w-14 h-8 rounded-full transition-colors ${darkMode ? 'bg-[#007C84]' : 'bg-gray-600'}`}>
+              <button onClick={toggleTheme} className={`relative w-14 h-8 rounded-full transition-colors ${darkMode ? 'bg-[var(--primary-color)]' : 'bg-gray-600'}`}>
                 <motion.div animate={{ x: darkMode ? 28 : 4 }} transition={{ type: 'spring', stiffness: 500, damping: 25 }} className="absolute top-1 left-0 w-6 h-6 bg-white rounded-full shadow-lg" />
               </button>
+            </div>
+
+            <div className="glass-card p-4 rounded-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Palette className="w-6 h-6 text-[var(--primary-color)]" />
+                <p className="text-white font-medium">Tema de Color</p>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: 'default', color: '#007C84', label: 'Teal' },
+                  { id: 'purple', color: '#7c3aed', label: 'Purple' },
+                  { id: 'blue', color: '#2563eb', label: 'Blue' },
+                  { id: 'green', color: '#16a34a', label: 'Green' },
+                  { id: 'sunset', color: '#ea580c', label: 'Sunset' }
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => changeColorTheme(t.id)}
+                    className={`w-full h-10 rounded-lg transition-all ${currentTheme === t.id ? 'ring-2 ring-white scale-110' : 'hover:scale-105'}`}
+                    style={{ backgroundColor: t.color }}
+                    title={t.label}
+                  />
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>

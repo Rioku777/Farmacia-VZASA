@@ -25,6 +25,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(true);
+  const [theme, setTheme] = useState('default');
 
   useEffect(() => {
     setupInitialData();
@@ -37,6 +38,11 @@ function App() {
     if (savedTheme) {
       setDarkMode(savedTheme === 'dark');
     }
+
+    const savedColorTheme = localStorage.getItem('vzasa_color_theme');
+    if (savedColorTheme) {
+      setTheme(savedColorTheme);
+    }
   }, []);
 
   useEffect(() => {
@@ -46,6 +52,14 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    document.body.className = ''; // Clear previous classes
+    document.body.classList.add('bg-slate-900', 'text-white'); // Base classes
+    if (theme !== 'default') {
+      document.body.classList.add(`theme-${theme}`);
+    }
+  }, [theme]);
 
   const handleLogin = (user) => {
     setCurrentUser(user);
@@ -63,6 +77,11 @@ function App() {
     setDarkMode(newMode);
     localStorage.setItem('vzasa_theme', newMode ? 'dark' : 'light');
   };
+
+  const changeColorTheme = (newTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem('vzasa_color_theme', newTheme);
+  };
   
   const mainContent = (
     <AnimatePresence mode="wait">
@@ -78,7 +97,7 @@ function App() {
         {currentView === 'inventario' && <Inventario currentUser={currentUser} />}
         {currentView === 'clientes' && <ClientesProveedores currentUser={currentUser} />}
         {currentView === 'reportes' && <Reportes currentUser={currentUser} />}
-        {currentView === 'configuracion' && <Configuracion currentUser={currentUser} darkMode={darkMode} toggleTheme={toggleTheme} />}
+        {currentView === 'configuracion' && <Configuracion currentUser={currentUser} darkMode={darkMode} toggleTheme={toggleTheme} currentTheme={theme} changeColorTheme={changeColorTheme} />}
       </motion.div>
     </AnimatePresence>
   );
