@@ -4,11 +4,15 @@ import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, Calendar, Download, DollarSign, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getData } from '@/lib/dataService';
+import { getInvoices } from '@/lib/dataService';
 
 const Reportes = ({ currentUser }) => {
   const [periodo, setPeriodo] = useState('semana');
-  const facturas = useMemo(() => getData('facturas'), []);
+  const [facturas, setFacturas] = useState([]);
+
+  useEffect(() => {
+    getInvoices().then(setFacturas).catch(console.error);
+  }, []);
 
   const estadisticas = useMemo(() => {
     const ahora = new Date();

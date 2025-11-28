@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Package, AlertTriangle, FileText, DollarSign, Users } from 'lucide-react';
-import { getData } from '@/lib/dataService';
+import { getInvoices, getProducts, getClients } from '@/lib/dataService';
 
 const Dashboard = ({ currentUser }) => {
   const [stats, setStats] = useState({
@@ -16,36 +16,45 @@ const Dashboard = ({ currentUser }) => {
   const [actividad, setActividad] = useState([]);
 
   useEffect(() => {
-    const facturas = getData('facturas');
-    const productos = getData('productos');
-    const clientes = getData('clientes');
+    const loadStats = async () => {
+        try {
+            const [facturas, productos, clientes] = await Promise.all([
+                getInvoices(),
+                getProducts(),
+                getClients()
+            ]);
 
-    const hoy = new Date().toDateString();
-    const facturasHoy = facturas.filter(f => new Date(f.fecha).toDateString() === hoy);
-    const ventasHoy = facturasHoy.reduce((sum, f) => sum + f.total, 0);
+            const hoy = new Date().toDateString();
+            const facturasHoy = facturas.filter(f => new Date(f.fecha).toDateString() === hoy);
+            const ventasHoy = facturasHoy.reduce((sum, f) => sum + f.total, 0);
 
-    const productosEnStock = productos.filter(p => p.stock > 0).length;
-    
-    const alertas = productos.filter(p => {
-      if (!p.fechaVencimiento) return false;
-      const fechaVencimiento = new Date(p.fechaVencimiento);
-      const diasRestantes = Math.ceil((fechaVencimiento - new Date()) / (1000 * 60 * 60 * 24));
-      return diasRestantes <= 30 && diasRestantes >= 0;
-    }).length;
+            const productosEnStock = productos.filter(p => p.stock > 0).length;
 
-    const totalVentas = facturas.reduce((sum, f) => sum + f.total, 0);
+            const alertas = productos.filter(p => {
+              if (!p.fechaVencimiento) return false;
+              const fechaVencimiento = new Date(p.fechaVencimiento);
+              const diasRestantes = Math.ceil((fechaVencimiento - new Date()) / (1000 * 60 * 60 * 24));
+              return diasRestantes <= 30 && diasRestantes >= 0;
+            }).length;
 
-    setStats({
-      ventasHoy,
-      productosStock: productosEnStock,
-      alertasVencimiento: alertas,
-      facturasEmitidas: facturas.length,
-      totalVentas,
-      clientesActivos: clientes.length
-    });
+            const totalVentas = facturas.reduce((sum, f) => sum + f.total, 0);
 
-    setActividad(facturas.slice(-3).reverse());
+            setStats({
+              ventasHoy,
+              productosStock: productosEnStock,
+              alertasVencimiento: alertas,
+              facturasEmitidas: facturas.length,
+              totalVentas,
+              clientesActivos: clientes.length
+            });
 
+            setActividad(facturas.slice(-3).reverse());
+        } catch(err) {
+            console.error(err);
+        }
+    };
+
+    loadStats();
   }, []);
 
   const statCards = [

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search, Package, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getData, setData } from '@/lib/dataService';
+import { getProducts, saveProduct, deleteProduct } from '@/lib/dataService';
 
 const Inventario = ({ currentUser }) => {
   const [productos, setProductos] = useState([]);
@@ -12,11 +12,21 @@ const Inventario = ({ currentUser }) => {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [productoEditando, setProductoEditando] = useState(null);
   const [formData, setFormData] = useState({
-    codigo: '', nombre: '', proveedor: '', precio: '', stock: '', fechaVencimiento: ''
+    codigo: '', nombre: '', forma: '', proveedor: '', precio: '', stock: '', fechaVencimiento: ''
   });
 
+  const loadProductos = async () => {
+    try {
+      const data = await getProducts();
+      setProductos(data);
+    } catch(err) {
+      console.error(err);
+      toast({ title: "Error", description: "No se pudieron cargar los productos", variant: "destructive" });
+    }
+  };
+
   useEffect(() => {
-    setProductos(getData('productos'));
+    loadProductos();
   }, []);
 
   const abrirModal = (producto = null) => {
@@ -25,43 +35,53 @@ const Inventario = ({ currentUser }) => {
       setFormData(producto);
     } else {
       setProductoEditando(null);
-      setFormData({ codigo: '', nombre: '', proveedor: '', precio: '', stock: '', fechaVencimiento: '' });
+      setFormData({ codigo: '', nombre: '', forma: '', proveedor: '', precio: '', stock: '', fechaVencimiento: '' });
     }
     setMostrarModal(true);
   };
 
   const cerrarModal = () => setMostrarModal(false);
 
-  const guardarProducto = () => {
+  const guardarProducto = async () => {
     if (!formData.nombre || !formData.precio || !formData.stock) {
       toast({ title: "Error ❌", description: "Nombre, precio y stock son obligatorios.", variant: "destructive" });
       return;
     }
 
-    let productosActualizados;
-    if (productoEditando) {
-      productosActualizados = productos.map(p => p.id === productoEditando.id ? { ...formData, id: p.id, precio: parseFloat(formData.precio), stock: parseInt(formData.stock) } : p);
-      toast({ title: "Producto Actualizado ✅", description: `${formData.nombre} ha sido actualizado.` });
-    } else {
-      const nuevoProducto = { ...formData, id: Date.now(), precio: parseFloat(formData.precio), stock: parseInt(formData.stock), codigo: formData.codigo || `P${Date.now()}` };
-      productosActualizados = [...productos, nuevoProducto];
-      toast({ title: "Producto Agregado ✅", description: `${formData.nombre} ha sido agregado al inventario.` });
-    }
+    const productoData = {
+        ...formData,
+        id: productoEditando ? productoEditando.id : undefined,
+        precio: parseFloat(formData.precio),
+        stock: parseInt(formData.stock),
+        codigo: formData.codigo || (productoEditando ? undefined : `P${Date.now()}`)
+    };
 
-    setData('productos', productosActualizados);
-    setProductos(productosActualizados);
-    cerrarModal();
+    try {
+        await saveProduct(productoData);
+        if (productoEditando) {
+             toast({ title: "Producto Actualizado ✅", description: `${formData.nombre} ha sido actualizado.` });
+        } else {
+             toast({ title: "Producto Agregado ✅", description: `${formData.nombre} ha sido agregado al inventario.` });
+        }
+        await loadProductos();
+        cerrarModal();
+    } catch(err) {
+        toast({ title: "Error ❌", description: err.message, variant: "destructive" });
+    }
   };
 
-  const eliminarProducto = (id) => {
+  const eliminarProducto = async (id) => {
     if (currentUser.role !== 'Administrador') {
       toast({ title: "Acceso Denegado 🚫", description: "Solo los administradores pueden eliminar productos.", variant: "destructive"});
       return;
     }
-    const productosActualizados = productos.filter(p => p.id !== id);
-    setData('productos', productosActualizados);
-    setProductos(productosActualizados);
-    toast({ title: "Producto Eliminado 🗑️", description: "El producto ha sido eliminado del inventario." });
+    try {
+        await deleteProduct(id);
+        toast({ title: "Producto Eliminado 🗑️", description: "El producto ha sido eliminado del inventario." });
+        await loadProductos();
+    } catch (err) {
+        toast({ title: "Error ❌", description: err.message, variant: "destructive" });
+    }
   };
 
   const getStockStatusColor = (stock) => {
@@ -101,13 +121,14 @@ const Inventario = ({ currentUser }) => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-6">
         <div className="mb-6"><div className="relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /><input type="text" placeholder="Buscar por nombre, código o proveedor..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="w-full pl-12 pr-4 py-3 glass-input rounded-xl text-white focus:outline-none"/></div></div>
         <div className="overflow-auto"><table className="w-full text-left">
-          <thead><tr className="border-b border-white/10"><th className="p-3 text-gray-400 font-medium">Nombre</th><th className="p-3 text-gray-400 font-medium">Proveedor</th><th className="p-3 text-gray-400 font-medium text-right">Precio</th><th className="p-3 text-gray-400 font-medium text-center">Stock</th><th className="p-3 text-gray-400 font-medium">Vencimiento</th><th className="p-3 text-gray-400 font-medium text-right">Acciones</th></tr></thead>
+          <thead><tr className="border-b border-white/10"><th className="p-3 text-gray-400 font-medium">Nombre</th><th className="p-3 text-gray-400 font-medium">Forma</th><th className="p-3 text-gray-400 font-medium">Proveedor</th><th className="p-3 text-gray-400 font-medium text-right">Precio</th><th className="p-3 text-gray-400 font-medium text-center">Stock</th><th className="p-3 text-gray-400 font-medium">Vencimiento</th><th className="p-3 text-gray-400 font-medium text-right">Acciones</th></tr></thead>
           <tbody>
             {productosFiltrados.map((producto) => {
               const vencimiento = getVencimientoStatus(producto.fechaVencimiento);
               return (
               <motion.tr key={producto.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-3"><p className="text-white font-medium">{producto.nombre}</p><p className="text-xs text-gray-500 font-mono">{producto.codigo}</p></td>
+                <td className="p-3 text-gray-300">{producto.forma || '-'}</td>
                 <td className="p-3 text-gray-400">{producto.proveedor || 'N/A'}</td>
                 <td className="p-3 text-[#00a8b4] font-semibold text-right">C$ {producto.precio.toFixed(2)}</td>
                 <td className="p-3 text-center"><span className={`font-bold text-lg ${getStockStatusColor(producto.stock)}`}>{producto.stock}</span></td>
@@ -129,6 +150,7 @@ const Inventario = ({ currentUser }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input placeholder="Nombre del producto *" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none md:col-span-2"/>
               <input placeholder="Código (opcional)" value={formData.codigo} onChange={(e) => setFormData({ ...formData, codigo: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
+              <input placeholder="Forma (ej. Pastillas, Jarabe)" value={formData.forma} onChange={(e) => setFormData({ ...formData, forma: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
               <input placeholder="Proveedor" value={formData.proveedor} onChange={(e) => setFormData({ ...formData, proveedor: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
               <input type="number" placeholder="Precio (C$) *" value={formData.precio} onChange={(e) => setFormData({ ...formData, precio: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
               <input type="number" placeholder="Stock *" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
@@ -149,4 +171,3 @@ const Inventario = ({ currentUser }) => {
 };
 
 export default Inventario;
-  
