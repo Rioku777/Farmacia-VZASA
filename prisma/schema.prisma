@@ -48,10 +48,11 @@ model Producto {
   id                    Int                     @id @default(autoincrement())
   nombre                String
   descripcion           String
+  forma                 String                  @default("Unidad")
   precio                Float
   stock                 Int
-  proveedor             Proveedor               @relation(fields: [proveedorId], references: [id])
-  proveedorId           Int
+  proveedor             Proveedor?              @relation(fields: [proveedorId], references: [id], onDelete: SetNull)
+  proveedorId           Int?
   facturaDetalles       FacturaDetalle[]
   inventarioMovimientos InventarioMovimiento[]
 }
