@@ -122,7 +122,7 @@ const Facturacion = ({ currentUser }) => {
                 <label className="block text-sm font-medium text-gray-300 mb-2">Producto</label>
                 <select value={productoSeleccionado} onChange={(e) => setProductoSeleccionado(e.target.value)} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none">
                   <option value="">Seleccionar producto...</option>
-                  {productos.filter(p => p.stock > 0).map(p => <option key={p.id} value={p.id}>{p.nombre} (Stock: {p.stock})</option>)}
+                  {productos.filter(p => p.stock > 0).map(p => <option key={p.id} value={p.id}>{p.nombre} {p.forma ? `(${p.forma})` : ''} (Stock: {p.stock})</option>)}
                 </select>
               </div>
               <div>

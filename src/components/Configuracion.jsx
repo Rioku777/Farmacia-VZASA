@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Download, Upload, Moon, Sun, Shield, Database, Edit } from 'lucide-react';
+import { Save, Download, Upload, Moon, Sun, Shield, Database, Edit, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { getData, setData, getAllData } from '@/lib/dataService';
 
-const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
+const Configuracion = ({ currentUser, darkMode, toggleTheme, currentThemeColor, changeThemeColor }) => {
   const [config, setConfig] = useState({
     nombreFarmacia: 'Farmacia V&ZASA', direccion: '', telefono: '', email: '', iva: 15
   });
@@ -54,6 +54,14 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
     });
   };
 
+  const colorThemes = [
+    { id: 'default', label: 'Verde Azulado', color: '#007C84' },
+    { id: 'purple', label: 'Violeta', color: '#7c3aed' },
+    { id: 'blue', label: 'Azul Real', color: '#2563eb' },
+    { id: 'orange', label: 'Naranja Fuego', color: '#ea580c' },
+    { id: 'rose', label: 'Rosa Intenso', color: '#e11d48' },
+  ];
+
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-6">
@@ -85,7 +93,24 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Apariencia</h2>
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Palette className="w-6 h-6 text-[#007C84]" />Apariencia</h2>
+
+            <div className="mb-4">
+               <label className="block text-sm font-medium text-gray-300 mb-3">Color del Tema</label>
+               <div className="grid grid-cols-5 gap-2">
+                 {colorThemes.map((theme) => (
+                   <button
+                     key={theme.id}
+                     onClick={() => changeThemeColor(theme.id)}
+                     className={`w-full aspect-square rounded-full transition-all duration-300 ${currentThemeColor === theme.id ? 'ring-2 ring-white scale-110' : 'hover:scale-105 opacity-70 hover:opacity-100'}`}
+                     style={{ backgroundColor: theme.color }}
+                     title={theme.label}
+                   />
+                 ))}
+               </div>
+               <p className="text-center text-sm text-gray-400 mt-2">{colorThemes.find(t => t.id === currentThemeColor)?.label}</p>
+            </div>
+
             <div className="flex items-center justify-between glass-card p-4 rounded-xl">
               <div className="flex items-center gap-3">
                 {darkMode ? <Moon className="w-6 h-6 text-[#007C84]" /> : <Sun className="w-6 h-6 text-[#007C84]" />}
@@ -103,4 +128,3 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
 };
 
 export default Configuracion;
-  

@@ -25,6 +25,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(true);
+  const [currentThemeColor, setCurrentThemeColor] = useState('default');
 
   useEffect(() => {
     setupInitialData();
@@ -33,9 +34,14 @@ function App() {
       setCurrentUser(JSON.parse(savedUser));
     }
 
-    const savedTheme = localStorage.getItem('vzasa_theme');
-    if (savedTheme) {
-      setDarkMode(savedTheme === 'dark');
+    const savedDarkMode = localStorage.getItem('vzasa_darkmode');
+    if (savedDarkMode !== null) {
+      setDarkMode(savedDarkMode === 'true');
+    }
+
+    const savedThemeColor = localStorage.getItem('vzasa_theme_color');
+    if (savedThemeColor) {
+      setCurrentThemeColor(savedThemeColor);
     }
   }, []);
 
@@ -46,6 +52,16 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    // Remove all theme classes first
+    document.body.classList.remove('theme-purple', 'theme-blue', 'theme-orange', 'theme-rose');
+
+    // Add current theme class if not default
+    if (currentThemeColor !== 'default') {
+      document.body.classList.add(`theme-${currentThemeColor}`);
+    }
+  }, [currentThemeColor]);
 
   const handleLogin = (user) => {
     setCurrentUser(user);
@@ -61,7 +77,12 @@ function App() {
   const toggleTheme = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
-    localStorage.setItem('vzasa_theme', newMode ? 'dark' : 'light');
+    localStorage.setItem('vzasa_darkmode', newMode.toString());
+  };
+
+  const changeThemeColor = (colorId) => {
+    setCurrentThemeColor(colorId);
+    localStorage.setItem('vzasa_theme_color', colorId);
   };
   
   const mainContent = (
@@ -78,13 +99,21 @@ function App() {
         {currentView === 'inventario' && <Inventario currentUser={currentUser} />}
         {currentView === 'clientes' && <ClientesProveedores currentUser={currentUser} />}
         {currentView === 'reportes' && <Reportes currentUser={currentUser} />}
-        {currentView === 'configuracion' && <Configuracion currentUser={currentUser} darkMode={darkMode} toggleTheme={toggleTheme} />}
+        {currentView === 'configuracion' && (
+          <Configuracion
+            currentUser={currentUser}
+            darkMode={darkMode}
+            toggleTheme={toggleTheme}
+            currentThemeColor={currentThemeColor}
+            changeThemeColor={changeThemeColor}
+          />
+        )}
       </motion.div>
     </AnimatePresence>
   );
 
   return (
-    <div className="main-background min-h-screen">
+    <div className="main-background min-h-screen transition-colors duration-500">
       <BackgroundOrbs />
       {!currentUser ? (
         <>
@@ -138,9 +167,9 @@ function Sidebar({ currentView, setCurrentView, currentUser, onLogout }) {
       <div className="mb-8 text-center">
         <motion.div 
           whileHover={{ scale: 1.05 }}
-          className="w-28 h-28 mx-auto mb-4 rounded-2xl glass-card flex items-center justify-center pulse-glow border border-[#007C84]/50"
+          className="w-28 h-28 mx-auto mb-4 rounded-2xl glass-card flex items-center justify-center pulse-glow border border-primary-20"
         >
-          <span className="text-5xl font-bold text-[#007C84]">V&Z</span>
+          <span className="text-5xl font-bold text-primary">V&Z</span>
         </motion.div>
         <h2 className="text-xl font-bold text-white">Farmacia V&ZASA</h2>
         <p className="text-sm text-gray-400 mt-1">Nindirí, Nicaragua</p>
@@ -162,7 +191,7 @@ function Sidebar({ currentView, setCurrentView, currentUser, onLogout }) {
             {currentView === item.id && (
               <motion.div
                 layoutId="sidebar-active-indicator"
-                className="absolute left-0 top-0 h-full w-1 bg-[#00a8b4] rounded-r-full"
+                className="absolute left-0 top-0 h-full w-1 bg-white/50 rounded-r-full"
               />
             )}
             <item.icon className="w-5 h-5 shrink-0" />
@@ -175,7 +204,7 @@ function Sidebar({ currentView, setCurrentView, currentUser, onLogout }) {
         <div className="glass-card p-4 rounded-xl mb-4">
           <p className="text-sm text-gray-400">Usuario activo</p>
           <p className="font-semibold text-white truncate">{currentUser.username}</p>
-          <p className="text-xs text-[#007C84] font-medium mt-1 flex items-center gap-1">
+          <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
             <Briefcase className="w-3 h-3" />
             {currentUser.role}
           </p>
@@ -195,4 +224,3 @@ function Sidebar({ currentView, setCurrentView, currentUser, onLogout }) {
 }
 
 export default App;
-  
