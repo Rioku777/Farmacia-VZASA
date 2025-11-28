@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search, Users, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getData, setData } from '@/lib/dataService';
+import { getClients, saveClient, deleteClient, getProviders, saveProvider, deleteProvider } from '@/lib/dataService';
 
 const ClientesProveedores = ({ currentUser }) => {
   const [vista, setVista] = useState('clientes');
@@ -14,8 +14,23 @@ const ClientesProveedores = ({ currentUser }) => {
   const [editando, setEditando] = useState(null);
   const [formData, setFormData] = useState({ nombre: '', telefono: '', email: '', direccion: '', notas: '' });
 
+  const loadData = async () => {
+    try {
+        let data = [];
+        if (vista === 'clientes') {
+            data = await getClients();
+        } else {
+            data = await getProviders();
+        }
+        setItems(data);
+    } catch(err) {
+        console.error(err);
+        toast({ title: "Error", description: "Error al cargar datos", variant: "destructive" });
+    }
+  };
+
   useEffect(() => {
-    setItems(getData(vista));
+    loadData();
     setBusqueda('');
   }, [vista]);
 
@@ -27,31 +42,40 @@ const ClientesProveedores = ({ currentUser }) => {
   
   const cerrarModal = () => setMostrarModal(false);
 
-  const guardar = () => {
+  const guardar = async () => {
     if (!formData.nombre) {
       toast({ title: "Error ❌", description: "El nombre es obligatorio.", variant: "destructive" });
       return;
     }
     
-    let listaActualizada;
-    if (editando) {
-      listaActualizada = items.map(item => item.id === editando.id ? { ...formData, id: item.id } : item);
-      toast({ title: "Actualizado ✅", description: `${formData.nombre} ha sido actualizado.` });
-    } else {
-      listaActualizada = [...items, { ...formData, id: Date.now() }];
-      toast({ title: "Agregado ✅", description: `${formData.nombre} ha sido agregado.` });
+    const dataToSave = { ...formData, id: editando ? editando.id : undefined };
+
+    try {
+        if (vista === 'clientes') {
+            await saveClient(dataToSave);
+        } else {
+            await saveProvider(dataToSave);
+        }
+        toast({ title: editando ? "Actualizado ✅" : "Agregado ✅", description: `${formData.nombre} ha sido guardado.` });
+        await loadData();
+        cerrarModal();
+    } catch(err) {
+        toast({ title: "Error ❌", description: err.message, variant: "destructive" });
     }
-    
-    setData(vista, listaActualizada);
-    setItems(listaActualizada);
-    cerrarModal();
   };
 
-  const eliminar = (id) => {
-    const listaActualizada = items.filter(item => item.id !== id);
-    setData(vista, listaActualizada);
-    setItems(listaActualizada);
-    toast({ title: "Eliminado 🗑️", description: "El registro ha sido eliminado." });
+  const eliminar = async (id) => {
+    try {
+        if (vista === 'clientes') {
+            await deleteClient(id);
+        } else {
+            await deleteProvider(id);
+        }
+        toast({ title: "Eliminado 🗑️", description: "El registro ha sido eliminado." });
+        await loadData();
+    } catch(err) {
+        toast({ title: "Error ❌", description: err.message, variant: "destructive" });
+    }
   };
 
   const listaFiltrada = items.filter(item =>
