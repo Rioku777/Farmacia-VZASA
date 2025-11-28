@@ -7,10 +7,10 @@ const initialData = {
     { id: 2, username: 'vendedor', password: 'vendedor123', role: 'Vendedor' }
   ],
   productos: [
-    { id: 1, codigo: 'MED001', nombre: 'Paracetamol 500mg', proveedor: 'Farmacéutica Nacional', precio: 25.50, stock: 150, fechaVencimiento: '2025-12-31' },
-    { id: 2, codigo: 'MED002', nombre: 'Ibuprofeno 400mg', proveedor: 'Laboratorios Unidos', precio: 35.00, stock: 80, fechaVencimiento: '2026-06-30' },
-    { id: 3, codigo: 'MED003', nombre: 'Amoxicilina 500mg', proveedor: 'Farmacéutica Nacional', precio: 45.75, stock: 5, fechaVencimiento: '2025-12-15' },
-    { id: 4, codigo: 'VIT001', nombre: 'Vitamina C 1000mg', proveedor: 'Suplenat', precio: 120.00, stock: 0, fechaVencimiento: '2026-01-31' },
+    { id: 1, codigo: 'MED001', nombre: 'Paracetamol 500mg', forma: 'Pastillas', proveedor: 'Farmacéutica Nacional', precio: 25.50, stock: 150, fechaVencimiento: '2025-12-31' },
+    { id: 2, codigo: 'MED002', nombre: 'Ibuprofeno 400mg', forma: 'Cápsulas', proveedor: 'Laboratorios Unidos', precio: 35.00, stock: 80, fechaVencimiento: '2026-06-30' },
+    { id: 3, codigo: 'MED003', nombre: 'Amoxicilina 500mg', forma: 'Suspensión', proveedor: 'Farmacéutica Nacional', precio: 45.75, stock: 5, fechaVencimiento: '2025-12-15' },
+    { id: 4, codigo: 'VIT001', nombre: 'Vitamina C 1000mg', forma: 'Tabletas Efervescentes', proveedor: 'Suplenat', precio: 120.00, stock: 0, fechaVencimiento: '2026-01-31' },
   ],
   clientes: [
     { id: 1, nombre: 'María González', telefono: '8888-1234', email: 'maria@email.com', direccion: 'Nindirí Centro', notas: 'Cliente frecuente' }

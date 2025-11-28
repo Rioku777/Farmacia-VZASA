@@ -12,7 +12,7 @@ const Inventario = ({ currentUser }) => {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [productoEditando, setProductoEditando] = useState(null);
   const [formData, setFormData] = useState({
-    codigo: '', nombre: '', proveedor: '', precio: '', stock: '', fechaVencimiento: ''
+    codigo: '', nombre: '', forma: '', proveedor: '', precio: '', stock: '', fechaVencimiento: ''
   });
 
   useEffect(() => {
@@ -25,7 +25,7 @@ const Inventario = ({ currentUser }) => {
       setFormData(producto);
     } else {
       setProductoEditando(null);
-      setFormData({ codigo: '', nombre: '', proveedor: '', precio: '', stock: '', fechaVencimiento: '' });
+      setFormData({ codigo: '', nombre: '', forma: '', proveedor: '', precio: '', stock: '', fechaVencimiento: '' });
     }
     setMostrarModal(true);
   };
@@ -101,13 +101,14 @@ const Inventario = ({ currentUser }) => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-6">
         <div className="mb-6"><div className="relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /><input type="text" placeholder="Buscar por nombre, código o proveedor..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="w-full pl-12 pr-4 py-3 glass-input rounded-xl text-white focus:outline-none"/></div></div>
         <div className="overflow-auto"><table className="w-full text-left">
-          <thead><tr className="border-b border-white/10"><th className="p-3 text-gray-400 font-medium">Nombre</th><th className="p-3 text-gray-400 font-medium">Proveedor</th><th className="p-3 text-gray-400 font-medium text-right">Precio</th><th className="p-3 text-gray-400 font-medium text-center">Stock</th><th className="p-3 text-gray-400 font-medium">Vencimiento</th><th className="p-3 text-gray-400 font-medium text-right">Acciones</th></tr></thead>
+          <thead><tr className="border-b border-white/10"><th className="p-3 text-gray-400 font-medium">Nombre</th><th className="p-3 text-gray-400 font-medium">Forma</th><th className="p-3 text-gray-400 font-medium">Proveedor</th><th className="p-3 text-gray-400 font-medium text-right">Precio</th><th className="p-3 text-gray-400 font-medium text-center">Stock</th><th className="p-3 text-gray-400 font-medium">Vencimiento</th><th className="p-3 text-gray-400 font-medium text-right">Acciones</th></tr></thead>
           <tbody>
             {productosFiltrados.map((producto) => {
               const vencimiento = getVencimientoStatus(producto.fechaVencimiento);
               return (
               <motion.tr key={producto.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-3"><p className="text-white font-medium">{producto.nombre}</p><p className="text-xs text-gray-500 font-mono">{producto.codigo}</p></td>
+                <td className="p-3 text-gray-300">{producto.forma || '-'}</td>
                 <td className="p-3 text-gray-400">{producto.proveedor || 'N/A'}</td>
                 <td className="p-3 text-[#00a8b4] font-semibold text-right">C$ {producto.precio.toFixed(2)}</td>
                 <td className="p-3 text-center"><span className={`font-bold text-lg ${getStockStatusColor(producto.stock)}`}>{producto.stock}</span></td>
@@ -129,6 +130,7 @@ const Inventario = ({ currentUser }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input placeholder="Nombre del producto *" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none md:col-span-2"/>
               <input placeholder="Código (opcional)" value={formData.codigo} onChange={(e) => setFormData({ ...formData, codigo: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
+              <input placeholder="Forma (ej. Pastillas, Jarabe)" value={formData.forma} onChange={(e) => setFormData({ ...formData, forma: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
               <input placeholder="Proveedor" value={formData.proveedor} onChange={(e) => setFormData({ ...formData, proveedor: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
               <input type="number" placeholder="Precio (C$) *" value={formData.precio} onChange={(e) => setFormData({ ...formData, precio: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
               <input type="number" placeholder="Stock *" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none"/>
@@ -149,4 +151,3 @@ const Inventario = ({ currentUser }) => {
 };
 
 export default Inventario;
-  
