@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Plus, Trash2, FileText, Search, Calendar, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getData, setData } from '@/lib/dataService';
+import { getProducts, getClients, getInvoices, createInvoice } from '@/lib/dataService';
 
 const Facturacion = ({ currentUser }) => {
   const [productos, setProductos] = useState([]);
@@ -16,10 +16,24 @@ const Facturacion = ({ currentUser }) => {
   const [historialFacturas, setHistorialFacturas] = useState([]);
   const [busqueda, setBusqueda] = useState('');
 
+  const loadData = async () => {
+    try {
+      const [prodData, cliData, invData] = await Promise.all([
+        getProducts(),
+        getClients(),
+        getInvoices()
+      ]);
+      setProductos(prodData);
+      setClientes(cliData);
+      setHistorialFacturas(invData);
+    } catch(err) {
+      console.error(err);
+      toast({ title: "Error", description: "Error al cargar datos", variant: "destructive" });
+    }
+  };
+
   useEffect(() => {
-    setProductos(getData('productos'));
-    setClientes(getData('clientes'));
-    setHistorialFacturas(getData('facturas'));
+    loadData();
   }, []);
 
   const agregarItem = () => {
@@ -61,7 +75,7 @@ const Facturacion = ({ currentUser }) => {
     return { subtotal, iva, total };
   };
 
-  const generarFactura = () => {
+  const generarFactura = async () => {
     if (facturaItems.length === 0) {
       toast({ title: "Error ❌", description: "Agregue productos para generar la factura.", variant: "destructive" });
       return;
@@ -69,7 +83,6 @@ const Facturacion = ({ currentUser }) => {
 
     const { subtotal, iva, total } = calcularTotales();
     const nuevaFactura = {
-      id: Date.now(),
       numero: `F-${Date.now().toString().slice(-6)}`,
       fecha: new Date().toISOString(),
       cliente: clienteSeleccionado ? clientes.find(c => c.id === parseInt(clienteSeleccionado))?.nombre : 'Cliente General',
@@ -78,20 +91,15 @@ const Facturacion = ({ currentUser }) => {
       usuario: currentUser.username
     };
 
-    const facturasActualizadas = [...historialFacturas, nuevaFactura];
-    setData('facturas', facturasActualizadas);
-    setHistorialFacturas(facturasActualizadas);
-
-    const productosActualizados = productos.map(p => {
-      const itemEnFactura = facturaItems.find(item => item.id === p.id);
-      return itemEnFactura ? { ...p, stock: p.stock - itemEnFactura.cantidad } : p;
-    });
-    setData('productos', productosActualizados);
-    setProductos(productosActualizados);
-
-    setFacturaItems([]);
-    setClienteSeleccionado('');
-    toast({ title: "¡Factura generada! 🎉", description: `Factura ${nuevaFactura.numero} creada exitosamente.` });
+    try {
+        const result = await createInvoice(nuevaFactura);
+        toast({ title: "¡Factura generada! 🎉", description: `Factura ${result.numero} creada exitosamente.` });
+        setFacturaItems([]);
+        setClienteSeleccionado('');
+        await loadData();
+    } catch(err) {
+        toast({ title: "Error ❌", description: err.message, variant: "destructive" });
+    }
   };
 
   const { subtotal, iva, total } = calcularTotales();
@@ -122,7 +130,7 @@ const Facturacion = ({ currentUser }) => {
                 <label className="block text-sm font-medium text-gray-300 mb-2">Producto</label>
                 <select value={productoSeleccionado} onChange={(e) => setProductoSeleccionado(e.target.value)} className="w-full px-4 py-3 glass-input rounded-xl text-white focus:outline-none">
                   <option value="">Seleccionar producto...</option>
-                  {productos.filter(p => p.stock > 0).map(p => <option key={p.id} value={p.id}>{p.nombre} (Stock: {p.stock})</option>)}
+                  {productos.filter(p => p.stock > 0).map(p => <option key={p.id} value={p.id}>{p.nombre} {p.forma ? `(${p.forma})` : ''} (Stock: {p.stock})</option>)}
                 </select>
               </div>
               <div>
