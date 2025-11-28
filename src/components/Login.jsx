@@ -4,27 +4,25 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Moon, Sun, User, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getData } from '@/lib/dataService';
+import { login } from '@/lib/dataService';
 
 const Login = ({ onLogin, darkMode, toggleTheme }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const users = getData('users');
-    const user = users.find(u => u.username === username && u.password === password);
-
-    if (user) {
+    try {
+      const user = await login(username, password);
       toast({
         title: "¡Bienvenido de vuelta! 🎉",
         description: `Acceso concedido como ${user.role}.`,
         className: 'glass-card text-white border-[#007C84]',
       });
       onLogin(user);
-    } else {
+    } catch(err) {
       toast({
         title: "Error de Acceso ❌",
         description: "Usuario o contraseña incorrectos. Por favor, intente de nuevo.",

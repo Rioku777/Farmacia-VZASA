@@ -1,21 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, Download, Upload, Moon, Sun, Shield, Database, Edit } from 'lucide-react';
+import { Save, Download, Upload, Moon, Sun, Shield, Database, Edit, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getData, setData, getAllData } from '@/lib/dataService';
+import { getConfig, saveConfig } from '@/lib/dataService';
 
-const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
+const Configuracion = ({ currentUser, darkMode, toggleTheme, currentThemeColor, changeThemeColor }) => {
   const [config, setConfig] = useState({
     nombreFarmacia: 'Farmacia V&ZASA', direccion: '', telefono: '', email: '', iva: 15
   });
 
   useEffect(() => {
-    const storedConfig = getData('config');
-    if (Object.keys(storedConfig).length > 0) {
-      setConfig(storedConfig);
-    }
+    const loadConfig = async () => {
+        try {
+            const data = await getConfig();
+            if (Object.keys(data).length > 0) {
+                setConfig(data);
+            }
+        } catch(err) {
+            console.error(err);
+        }
+    };
+    loadConfig();
   }, []);
 
   const handleInputChange = (e) => {
@@ -23,28 +30,17 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
     setConfig(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
   };
 
-  const guardarConfiguracion = () => {
-    setData('config', config);
-    toast({ title: "Configuración Guardada ✅", description: "Los cambios han sido guardados." });
+  const guardarConfiguracion = async () => {
+    try {
+        await saveConfig(config);
+        toast({ title: "Configuración Guardada ✅", description: "Los cambios han sido guardados." });
+    } catch(err) {
+        toast({ title: "Error ❌", description: "No se pudo guardar la configuración.", variant: "destructive" });
+    }
   };
 
   const exportarDatos = () => {
-    try {
-      const allData = getAllData();
-      const dataStr = JSON.stringify(allData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `vzasa_backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      toast({ title: "Respaldo Creado ✅", description: "Todos los datos han sido exportados." });
-    } catch (error) {
-      toast({ title: "Error al Exportar ❌", description: "No se pudo crear el respaldo.", variant: "destructive" });
-    }
+    toast({ title: "Función no disponible", description: "La exportación no está disponible en la versión de base de datos.", variant: "destructive" });
   };
 
   const importarDatos = () => {
@@ -53,6 +49,14 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
       description: "La importación de datos estará disponible próximamente.",
     });
   };
+
+  const colorThemes = [
+    { id: 'default', label: 'Verde Azulado', color: '#007C84' },
+    { id: 'purple', label: 'Violeta', color: '#7c3aed' },
+    { id: 'blue', label: 'Azul Real', color: '#2563eb' },
+    { id: 'orange', label: 'Naranja Fuego', color: '#ea580c' },
+    { id: 'rose', label: 'Rosa Intenso', color: '#e11d48' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -85,7 +89,24 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Apariencia</h2>
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Palette className="w-6 h-6 text-[#007C84]" />Apariencia</h2>
+
+            <div className="mb-4">
+               <label className="block text-sm font-medium text-gray-300 mb-3">Color del Tema</label>
+               <div className="grid grid-cols-5 gap-2">
+                 {colorThemes.map((theme) => (
+                   <button
+                     key={theme.id}
+                     onClick={() => changeThemeColor(theme.id)}
+                     className={`w-full aspect-square rounded-full transition-all duration-300 ${currentThemeColor === theme.id ? 'ring-2 ring-white scale-110' : 'hover:scale-105 opacity-70 hover:opacity-100'}`}
+                     style={{ backgroundColor: theme.color }}
+                     title={theme.label}
+                   />
+                 ))}
+               </div>
+               <p className="text-center text-sm text-gray-400 mt-2">{colorThemes.find(t => t.id === currentThemeColor)?.label}</p>
+            </div>
+
             <div className="flex items-center justify-between glass-card p-4 rounded-xl">
               <div className="flex items-center gap-3">
                 {darkMode ? <Moon className="w-6 h-6 text-[#007C84]" /> : <Sun className="w-6 h-6 text-[#007C84]" />}
@@ -103,4 +124,3 @@ const Configuracion = ({ currentUser, darkMode, toggleTheme }) => {
 };
 
 export default Configuracion;
-  
